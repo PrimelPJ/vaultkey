@@ -1,0 +1,139 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Description: >
+  vaultkey - Automated secrets rotation engine.
+  Rotates Secrets Manager secrets on a schedule and publishes
+  rotation events to an SNS topic for downstream alerting.
+
+Globals:
+  Function:
+    Runtime: python3.11
+    Timeout: 60
+    MemorySize: 256
+    Environment:
+      Variables:
+        AUDIT_TABLE: !Ref AuditTable
+        SNS_TOPIC_ARN: !Ref RotationTopic
+        ROTATION_WINDOW_HOURS: "24"
+        AWS_REGION: !Ref AWS::Region
+
+Parameters:
+  RotationStrategy:
+    Type: String
+    Default: api_key
+    AllowedValues: [api_key, rds_master, rds_user]
+    Description: Default rotation strategy when not specified in the event payload.
+
+  RotationSchedule:
+    Type: String
+    Default: "rate(30 days)"
+    Description: EventBridge schedule expression for automatic rotation.
+
+Resources:
+
+  # ── Lambda Function ──────────────────────────────────────────────────────────
+
+  RotatorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: vaultkey-rotator
+      CodeUri: src/
+      Handler: rotator.handler.lambda_handler
+      Description: Rotates secrets in AWS Secrets Manager on a schedule.
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt RotationDLQ.Arn
+      Environment:
+        Variables:
+          ROTATION_STRATEGY: !Ref RotationStrategy
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+                - secretsmanager:PutSecretValue
+                - secretsmanager:DescribeSecret
+              Resource: "*"
+            - Effect: Allow
+              Action: sns:Publish
+              Resource: !Ref RotationTopic
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+              Resource: !GetAtt AuditTable.Arn
+            - Effect: Allow
+              Action:
+                - sqs:SendMessage
+              Resource: !GetAtt RotationDLQ.Arn
+            - Effect: Allow
+              Action:
+                - rds:ModifyDBInstance
+              Resource: "*"
+      Events:
+        ScheduledRotation:
+          Type: Schedule
+          Properties:
+            Schedule: !Ref RotationSchedule
+            Description: Trigger periodic secret rotation
+            Enabled: true
+
+  # ── SNS Topic ────────────────────────────────────────────────────────────────
+
+  RotationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: vaultkey-rotation-events
+      DisplayName: vaultkey Rotation Events
+
+  # ── DynamoDB Audit Table ─────────────────────────────────────────────────────
+
+  AuditTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: vaultkey-audit
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: secret_arn
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: secret_arn
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  # ── Dead Letter Queue ────────────────────────────────────────────────────────
+
+  RotationDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: vaultkey-rotation-dlq
+      MessageRetentionPeriod: 1209600  # 14 days
+      KmsMasterKeyId: alias/aws/sqs
+
+Outputs:
+  RotatorFunctionArn:
+    Description: ARN of the rotator Lambda function
+    Value: !GetAtt RotatorFunction.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-RotatorArn"
+
+  RotationTopicArn:
+    Description: ARN of the SNS rotation events topic
+    Value: !Ref RotationTopic
+    Export:
+      Name: !Sub "${AWS::StackName}-TopicArn"
+
+  AuditTableName:
+    Description: Name of the DynamoDB audit table
+    Value: !Ref AuditTable
