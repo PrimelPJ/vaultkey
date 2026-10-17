@@ -42,6 +42,7 @@ class RotationResult:
     success: bool
     message: str
     skipped: bool = False
+    rotated_at: datetime | None = None
 
 
 class RotationEngine:
@@ -98,7 +99,7 @@ class RotationEngine:
         msg = f"Successfully rotated {secret_arn}"
         logger.info(msg)
         self.notifier.notify(secret_arn, success=True, message=msg)
-        return RotationResult(success=True, message=msg)
+        return RotationResult(success=True, message=msg, rotated_at=datetime.now(tz=timezone.utc))
 
     def _describe_secret(self, secret_arn: str) -> dict[str, Any]:
         return self.sm.describe_secret(SecretId=secret_arn)
