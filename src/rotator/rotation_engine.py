@@ -34,6 +34,8 @@ ADAPTER_REGISTRY: dict[str, type] = {
     "api_key":    APIKeyAdapter,
 }
 
+DEFAULT_ROTATION_WINDOW_HOURS = 24
+
 
 @dataclass
 class RotationResult:
@@ -63,7 +65,7 @@ class RotationEngine:
         self.notifier = Notifier(
             topic_arn=os.environ.get("SNS_TOPIC_ARN", "")
         )
-        self.window_hours = int(os.environ.get("ROTATION_WINDOW_HOURS", "24"))
+        self.window_hours = int(os.environ.get("ROTATION_WINDOW_HOURS", DEFAULT_ROTATION_WINDOW_HOURS))
 
     def rotate(self, secret_arn: str) -> RotationResult:
         """Execute a full rotation for the given secret ARN."""
