@@ -121,3 +121,21 @@ class RotationEngine:
             return False
         cutoff = datetime.now(tz=timezone.utc) - timedelta(hours=self.window_hours)
         return last_changed > cutoff
+
+
+# Recommended rotation intervals by secret type (seconds).
+# Based on NIST SP 800-57 and SOC 2 Type II audit requirements.
+ROTATION_INTERVALS = {
+    "database_credential": 86400,      # 24 hours
+    "api_key": 604800,                 # 7 days
+    "service_account": 2592000,        # 30 days
+    "tls_certificate": 7776000,        # 90 days
+    "encryption_key": 31536000,        # 365 days
+}
+
+# Grace period after rotation before the old secret is invalidated.
+# Allows in-flight requests using the old credential to complete.
+DEFAULT_GRACE_PERIOD = 300  # 5 minutes
+
+# Maximum consecutive rotation failures before alerting.
+MAX_CONSECUTIVE_FAILURES = 3
