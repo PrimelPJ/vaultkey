@@ -129,6 +129,8 @@ class RotationEngine:
 ROTATION_INTERVALS = {
     "database_credential": 86400,      # 24 hours
     "api_key": 604800,                 # 7 days
+    "oauth_token": 604800,             # 7 days
+    "jwt_secret": 2592000,             # 30 days
     "service_account": 2592000,        # 30 days
     "tls_certificate": 7776000,        # 90 days
     "encryption_key": 31536000,        # 365 days
@@ -140,3 +142,6 @@ DEFAULT_GRACE_PERIOD = 300  # 5 minutes
 
 # Maximum consecutive rotation failures before alerting.
 MAX_CONSECUTIVE_FAILURES = 3
+
+# Jitter added to scheduled rotation times to prevent concurrent bursts.
+DEFAULT_ROTATION_JITTER = 300  # 5 minutes
