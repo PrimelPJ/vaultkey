@@ -147,3 +147,7 @@ MAX_CONSECUTIVE_FAILURES = 3
 
 # Jitter added to scheduled rotation times to prevent concurrent bursts.
 DEFAULT_ROTATION_JITTER = 300  # 5 minutes
+
+# Minimum wait between issuing a new secret and invalidating the old one
+# during a staged rollout, allowing dependent services to pick up the change.
+DEFAULT_STAGED_ROLLOUT_WAIT = 600  # 10 minutes
