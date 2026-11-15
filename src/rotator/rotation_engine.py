@@ -136,6 +136,7 @@ ROTATION_INTERVALS = {
     "ssh_key": 7776000,                # 90 days
     "tls_certificate": 7776000,        # 90 days
     "encryption_key": 31536000,        # 365 days
+    "webhook_key": 2592000,            # 30 days
 }
 
 # Grace period after rotation before the old secret is invalidated.
@@ -151,3 +152,7 @@ DEFAULT_ROTATION_JITTER = 300  # 5 minutes
 # Minimum wait between issuing a new secret and invalidating the old one
 # during a staged rollout, allowing dependent services to pick up the change.
 DEFAULT_STAGED_ROLLOUT_WAIT = 600  # 10 minutes
+
+# Maximum time a secret may remain in the staging/pending state before it
+# must be promoted to current or discarded and re-rotated.
+DEFAULT_STAGING_TTL = 3600  # 1 hour

@@ -25,6 +25,7 @@ from .base import TargetAdapter
 logger = logging.getLogger(__name__)
 
 DEFAULT_KEY_BYTES = 32  # 256-bit key → 43-char base64url string
+DEFAULT_WEBHOOK_KEY_BYTES = 24  # 192-bit key → 32-char base64url string
 
 
 class APIKeyAdapter(TargetAdapter):
