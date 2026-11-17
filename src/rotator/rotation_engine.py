@@ -137,6 +137,8 @@ ROTATION_INTERVALS = {
     "tls_certificate": 7776000,        # 90 days
     "encryption_key": 31536000,        # 365 days
     "webhook_key": 2592000,            # 30 days
+    "api_gateway": 604800,             # 7 days
+    "custom_header": 2592000,          # 30 days
 }
 
 # Grace period after rotation before the old secret is invalidated.
