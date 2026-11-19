@@ -139,6 +139,8 @@ ROTATION_INTERVALS = {
     "webhook_key": 2592000,            # 30 days
     "api_gateway": 604800,             # 7 days
     "custom_header": 2592000,          # 30 days
+    "saml_token": 86400,               # 24 hours
+    "ca_credential": 7776000,          # 90 days
 }
 
 # Grace period after rotation before the old secret is invalidated.
@@ -150,6 +152,9 @@ MAX_CONSECUTIVE_FAILURES = 3
 
 # Jitter added to scheduled rotation times to prevent concurrent bursts.
 DEFAULT_ROTATION_JITTER = 300  # 5 minutes
+
+# Base delay (seconds) for exponential backoff between rotation retry attempts.
+DEFAULT_RETRY_BACKOFF_SECONDS = 2
 
 # Minimum wait between issuing a new secret and invalidating the old one
 # during a staged rollout, allowing dependent services to pick up the change.
