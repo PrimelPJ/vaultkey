@@ -139,6 +139,8 @@ ROTATION_INTERVALS = {
     "webhook_key": 2592000,            # 30 days
     "api_gateway": 604800,             # 7 days
     "custom_header": 2592000,          # 30 days
+    "saml_token": 86400,               # 24 hours
+    "ca_credential": 7776000,          # 90 days
 }
 
 # Grace period after rotation before the old secret is invalidated.
