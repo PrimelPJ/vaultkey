@@ -141,6 +141,8 @@ ROTATION_INTERVALS = {
     "custom_header": 2592000,          # 30 days
     "saml_token": 86400,               # 24 hours
     "ca_credential": 7776000,          # 90 days
+    "oidc_client_secret": 2592000,     # 30 days
+    "mfa_totp_seed": 7776000,          # 90 days
 }
 
 # Grace period after rotation before the old secret is invalidated.
